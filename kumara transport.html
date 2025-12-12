@@ -1,0 +1,1338 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kumara Transport Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .animated-gradient {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .chart-bar {
+      transition: all 0.3s ease;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    
+    .autocomplete-dropdown {
+      position: absolute;
+      z-index: 1000;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    
+    .autocomplete-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.2s;
+    }
+    
+    .autocomplete-item:hover {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .floating-card {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .pulse-ring {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .truck-icon {
+      animation: drive 2s ease-in-out infinite;
+    }
+    
+    @keyframes drive {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(5px); }
+    }
+    
+    .shine {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .shine::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .shine:hover::before {
+      left: 100%;
+    }
+    
+    .route-line {
+      border-left: 2px dashed #9ca3af;
+      position: relative;
+    }
+    
+    .route-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      position: absolute;
+      left: -7px;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .slide-in {
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    .profit-indicator {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .profit-indicator::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto animated-gradient">
+   <div class="max-w-7xl mx-auto p-6"><!-- Enhanced Header with Logo -->
+    <header class="glass-effect rounded-2xl shadow-2xl p-8 mb-6 shine">
+     <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-6"><!-- Animated Logo -->
+       <div class="relative">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-xl">
+         <svg class="w-12 h-12 text-white truck-icon" fill="currentColor" viewbox="0 0 24 24"><path d="M18 18.5a1.5 1.5 0 01-1.5-1.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5c0 .83-.67 1.5-1.5 1.5zm1.5-9l1.96 2.5H17V9.5h2.5m-11 9A1.5 1.5 0 017 17c0-.83.67-1.5 1.5-1.5S10 16.17 10 17c0 .83-.67 1.5-1.5 1.5M20 8h-3V4H3c-1.11 0-2 .89-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z" />
+         </svg>
+        </div>
+        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white pulse-ring"></div>
+       </div>
+       <div>
+        <h1 class="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">Kumara Transport</h1>
+        <p class="text-gray-700 mt-1 text-lg font-medium">Delivering Excellence Across India 🚛</p>
+       </div>
+      </div>
+      <div class="text-right">
+       <div class="text-sm text-gray-600 font-semibold uppercase tracking-wide">
+        Fleet Capacity
+       </div>
+       <div class="flex items-center gap-3 mt-1">
+        <div class="text-4xl font-black bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+         60
+        </div>
+        <div class="text-2xl">
+         📦
+        </div>
+       </div>
+      </div>
+     </div>
+    </header><!-- Enhanced Navigation Tabs -->
+    <div class="glass-effect rounded-2xl shadow-xl p-2 mb-6">
+     <div class="flex gap-2 flex-wrap"><button onclick="showTab('dashboard')" id="tab-dashboard" class="flex-1 py-4 px-6 rounded-xl font-bold transition-all bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg min-w-[120px]"> 📊 Dashboard </button> <button onclick="showTab('vehicles')" id="tab-vehicles" class="flex-1 py-4 px-6 rounded-xl font-bold transition-all text-gray-700 hover:bg-white hover:shadow-md min-w-[120px]"> 🚛 Fleet </button> <button onclick="showTab('accounts')" id="tab-accounts" class="flex-1 py-4 px-6 rounded-xl font-bold transition-all text-gray-700 hover:bg-white hover:shadow-md min-w-[120px]"> 💰 Finance </button> <button onclick="showTab('trips')" id="tab-trips" class="flex-1 py-4 px-6 rounded-xl font-bold transition-all text-gray-700 hover:bg-white hover:shadow-md min-w-[120px]"> 🗺️ Trips </button> <button onclick="showTab('graphs')" id="tab-graphs" class="flex-1 py-4 px-6 rounded-xl font-bold transition-all text-gray-700 hover:bg-white hover:shadow-md min-w-[120px]"> 📈 Analytics </button>
+     </div>
+    </div><!-- Dashboard Tab -->
+    <div id="content-dashboard" class="tab-content slide-in"><!-- Enhanced Financial Summary Cards -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="glass-effect rounded-2xl shadow-2xl p-8 stat-card floating-card profit-indicator">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-gray-600 text-sm font-bold uppercase tracking-wide">Total Revenue</p>
+         <p id="total-income" class="text-4xl font-black text-green-600 mt-2">₹0</p>
+        </div>
+        <div class="bg-gradient-to-br from-green-400 to-green-600 p-5 rounded-2xl shadow-xl"><span class="text-4xl">💵</span>
+        </div>
+       </div>
+       <div class="mt-4 pt-4 border-t border-gray-200">
+        <div class="flex items-center text-sm text-green-600 font-semibold"><span class="mr-2">📈</span> <span>Income Stream</span>
+        </div>
+       </div>
+      </div>
+      <div class="glass-effect rounded-2xl shadow-2xl p-8 stat-card floating-card" style="animation-delay: 0.1s;">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-gray-600 text-sm font-bold uppercase tracking-wide">Total Expenses</p>
+         <p id="total-expenses" class="text-4xl font-black text-red-600 mt-2">₹0</p>
+        </div>
+        <div class="bg-gradient-to-br from-red-400 to-red-600 p-5 rounded-2xl shadow-xl"><span class="text-4xl">💸</span>
+        </div>
+       </div>
+       <div class="mt-4 pt-4 border-t border-gray-200">
+        <div class="flex items-center text-sm text-red-600 font-semibold"><span class="mr-2">📉</span> <span>Operational Costs</span>
+        </div>
+       </div>
+      </div>
+      <div class="glass-effect rounded-2xl shadow-2xl p-8 stat-card floating-card profit-indicator" style="animation-delay: 0.2s;">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-gray-600 text-sm font-bold uppercase tracking-wide">Net Profit</p>
+         <p id="net-balance" class="text-4xl font-black text-purple-600 mt-2">₹0</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-400 to-purple-600 p-5 rounded-2xl shadow-xl"><span class="text-4xl">💎</span>
+        </div>
+       </div>
+       <div class="mt-4 pt-4 border-t border-gray-200">
+        <div id="profit-margin" class="flex items-center text-sm text-purple-600 font-semibold"><span class="mr-2">⚡</span> <span>Profit Margin: 0%</span>
+        </div>
+       </div>
+      </div>
+     </div><!-- Enhanced Quick Stats Grid -->
+     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="glass-effect rounded-xl shadow-lg p-6 stat-card hover:scale-105">
+       <div class="text-purple-600 text-3xl mb-2">
+        🚛
+       </div>
+       <div class="text-gray-600 text-xs font-bold uppercase">
+        Total Fleet
+       </div>
+       <div id="stat-vehicles" class="text-3xl font-black text-purple-600">
+        0
+       </div>
+      </div>
+      <div class="glass-effect rounded-xl shadow-lg p-6 stat-card hover:scale-105">
+       <div class="text-blue-600 text-3xl mb-2">
+        🔄
+       </div>
+       <div class="text-gray-600 text-xs font-bold uppercase">
+        Active Trips
+       </div>
+       <div id="stat-active-trips" class="text-3xl font-black text-blue-600">
+        0
+       </div>
+      </div>
+      <div class="glass-effect rounded-xl shadow-lg p-6 stat-card hover:scale-105">
+       <div class="text-green-600 text-3xl mb-2">
+        ✅
+       </div>
+       <div class="text-gray-600 text-xs font-bold uppercase">
+        Completed
+       </div>
+       <div id="stat-completed-trips" class="text-3xl font-black text-green-600">
+        0
+       </div>
+      </div>
+      <div class="glass-effect rounded-xl shadow-lg p-6 stat-card hover:scale-105">
+       <div class="text-teal-600 text-3xl mb-2">
+        🟢
+       </div>
+       <div class="text-gray-600 text-xs font-bold uppercase">
+        Available
+       </div>
+       <div id="stat-available-vehicles" class="text-3xl font-black text-teal-600">
+        0
+       </div>
+      </div>
+     </div><!-- Active Trips Summary -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8">
+      <div class="flex items-center gap-3 mb-6">
+       <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center"><span class="text-2xl">⚡</span>
+       </div>
+       <h3 class="text-2xl font-black text-gray-800">Recent Activity</h3>
+      </div>
+      <div id="recent-activity" class="space-y-3"></div>
+     </div>
+    </div><!-- Analytics Tab -->
+    <div id="content-graphs" class="tab-content hidden">
+     <div class="space-y-6">
+      <div class="grid grid-cols-1 gap-6">
+       <div class="glass-effect rounded-2xl shadow-2xl p-8">
+        <h3 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">📊</span> Income vs Expenses (Last 7 Days)</h3>
+        <div id="weekly-chart" class="h-80"></div>
+       </div>
+       <div class="glass-effect rounded-2xl shadow-2xl p-8">
+        <h3 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">🚛</span> Vehicle Status Distribution</h3>
+        <div id="vehicle-status-chart" class="h-80"></div>
+       </div>
+       <div class="glass-effect rounded-2xl shadow-2xl p-8">
+        <h3 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">📈</span> Monthly Trend (Last 30 Days)</h3>
+        <div id="monthly-chart" class="h-80"></div>
+       </div>
+       <div class="glass-effect rounded-2xl shadow-2xl p-8">
+        <h3 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">🗺️</span> Trip Status Overview</h3>
+        <div id="trip-status-chart" class="h-80"></div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Vehicles Tab -->
+    <div id="content-vehicles" class="tab-content hidden">
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">➕</span> Add New Vehicle</h2>
+      <form id="vehicle-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div><label for="vehicle-number" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Vehicle Number</label> <input type="text" id="vehicle-number" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="TN-01-AB-1234">
+       </div>
+       <div><label for="driver-name" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Driver Name</label> <input type="text" id="driver-name" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter driver name">
+       </div>
+       <div><label for="driver-phone" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Driver Phone</label> <input type="tel" id="driver-phone" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="+91 98765 43210">
+       </div>
+       <div><label for="vehicle-status" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Current Status</label> <select id="vehicle-status" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold"> <option value="available">🟢 Available</option> <option value="in-transit">🔵 In Transit</option> <option value="maintenance">🟠 Maintenance</option> </select>
+       </div>
+       <div class="md:col-span-2"><label for="vehicle-company" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Associated Company</label> <input type="text" id="vehicle-company" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Company name (optional)">
+       </div>
+       <div class="md:col-span-2"><button type="submit" id="vehicle-submit-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-4 rounded-xl font-black text-lg hover:from-purple-700 hover:to-pink-600 transition-all shadow-xl hover:shadow-2xl shine"> ✨ Add Vehicle to Fleet </button>
+       </div>
+      </form>
+     </div>
+     <div class="glass-effect rounded-2xl shadow-2xl p-8">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">🚚</span> Vehicle Fleet</h2>
+      <div id="vehicle-list" class="space-y-4"></div>
+     </div>
+    </div><!-- Accounts Tab -->
+    <div id="content-accounts" class="tab-content hidden">
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">💰</span> Add Transaction</h2>
+      <form id="account-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div><label for="transaction-type" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Transaction Type</label> <select id="transaction-type" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold"> <option value="income">💵 Income (Money Received)</option> <option value="expense">💸 Expense (Money Spent)</option> </select>
+       </div>
+       <div><label for="transaction-amount" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Amount (₹)</label> <input type="number" id="transaction-amount" required min="0" step="0.01" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter amount">
+       </div>
+       <div><label for="transaction-date" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Date</label> <input type="date" id="transaction-date" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold">
+       </div>
+       <div class="input-wrapper"><label for="transaction-vehicle" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Vehicle Number</label> <input type="text" id="transaction-vehicle" autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Start typing vehicle number...">
+        <div id="transaction-vehicle-dropdown" class="autocomplete-dropdown"></div>
+       </div>
+       <div class="md:col-span-2"><label for="transaction-description" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Description</label> <input type="text" id="transaction-description" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Payment from client, fuel cost, toll charges, etc.">
+       </div>
+       <div class="md:col-span-2"><button type="submit" id="account-submit-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-4 rounded-xl font-black text-lg hover:from-purple-700 hover:to-pink-600 transition-all shadow-xl hover:shadow-2xl shine"> ✨ Add Transaction </button>
+       </div>
+      </form>
+     </div>
+     <div class="glass-effect rounded-2xl shadow-2xl p-8">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">📋</span> Transaction History</h2>
+      <div id="transaction-list" class="space-y-4"></div>
+     </div>
+    </div><!-- Trips Tab -->
+    <div id="content-trips" class="tab-content hidden">
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">🗺️</span> Schedule New Trip</h2>
+      <form id="trip-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div class="input-wrapper"><label for="trip-vehicle" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Vehicle Number</label> <input type="text" id="trip-vehicle" required autocomplete="off" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Start typing vehicle number...">
+        <div id="trip-vehicle-dropdown" class="autocomplete-dropdown"></div>
+       </div>
+       <div><label for="trip-driver" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Driver Name</label> <input type="text" id="trip-driver" required readonly class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-100 font-semibold" placeholder="Auto-filled from vehicle">
+       </div>
+       <div><label for="trip-from" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">📍 From Location</label> <input type="text" id="trip-from" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Starting point (e.g., Chennai)">
+       </div>
+       <div><label for="trip-to" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">🎯 To Location</label> <input type="text" id="trip-to" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Destination (e.g., Mumbai)">
+       </div>
+       <div><label for="trip-distance" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">📏 Distance (KM)</label> <input type="number" id="trip-distance" min="0" step="0.1" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter distance in km">
+       </div>
+       <div><label for="trip-company" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Client Company</label> <input type="text" id="trip-company" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Company name">
+       </div>
+       <div><label for="trip-date" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">📅 Trip Date</label> <input type="date" id="trip-date" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold">
+       </div>
+       <div><label for="trip-status" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Status</label> <select id="trip-status" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold"> <option value="scheduled">📅 Scheduled</option> <option value="in-progress">🔄 In Progress</option> <option value="completed">✅ Completed</option> </select>
+       </div>
+       <div><label for="trip-amount" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">💰 Trip Revenue (₹)</label> <input type="number" id="trip-amount" required min="0" step="0.01" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter trip revenue">
+       </div>
+       <div><label for="trip-fuel" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">⛽ Fuel Cost (₹)</label> <input type="number" id="trip-fuel" min="0" step="0.01" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter fuel cost">
+       </div>
+       <div><label for="trip-toll" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">🛣️ Toll Cost (₹)</label> <input type="number" id="trip-toll" min="0" step="0.01" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Enter toll charges">
+       </div>
+       <div class="md:col-span-2"><label for="trip-description" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Description / Notes</label> <input type="text" id="trip-description" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-400 focus:border-purple-600 transition font-semibold" placeholder="Cargo details, special instructions, etc.">
+       </div>
+       <div class="md:col-span-2"><button type="submit" id="trip-submit-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-4 rounded-xl font-black text-lg hover:from-purple-700 hover:to-pink-600 transition-all shadow-xl hover:shadow-2xl shine"> ✨ Schedule Trip </button>
+       </div>
+      </form>
+     </div>
+     <div class="glass-effect rounded-2xl shadow-2xl p-8">
+      <h2 class="text-3xl font-black text-gray-800 mb-6 flex items-center gap-3"><span class="text-4xl">📦</span> Trip Schedule</h2>
+      <div id="trip-list" class="space-y-4"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // LocalStorage-based Data Management
+    let allData = [];
+
+    function loadData() {
+      const stored = localStorage.getItem('kumaraTransportData');
+      if (stored) {
+        allData = JSON.parse(stored);
+      }
+      updateAllViews();
+    }
+
+    function saveData() {
+      localStorage.setItem('kumaraTransportData', JSON.stringify(allData));
+      updateAllViews();
+    }
+
+    function generateId(type) {
+      return type + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function initApp() {
+      loadData();
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('transaction-date').value = today;
+      document.getElementById('trip-date').value = today;
+
+      setupEventListeners();
+    }
+
+    function setupEventListeners() {
+      document.getElementById('vehicle-form').addEventListener('submit', handleVehicleSubmit);
+      document.getElementById('account-form').addEventListener('submit', handleAccountSubmit);
+      document.getElementById('trip-form').addEventListener('submit', handleTripSubmit);
+
+      setupVehicleAutocomplete('transaction-vehicle', 'transaction-vehicle-dropdown', null);
+      setupVehicleAutocomplete('trip-vehicle', 'trip-vehicle-dropdown', 'trip-driver');
+
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.input-wrapper')) {
+          document.querySelectorAll('.autocomplete-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+          });
+        }
+      });
+    }
+
+    function setupVehicleAutocomplete(inputId, dropdownId, driverFieldId) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+
+      input.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        if (searchTerm.length === 0) {
+          dropdown.style.display = 'none';
+          return;
+        }
+
+        const vehicles = allData.filter(item => item.type === 'vehicle');
+        const matches = vehicles.filter(vehicle => 
+          vehicle.vehicle_number.toLowerCase().includes(searchTerm)
+        );
+
+        if (matches.length === 0) {
+          dropdown.style.display = 'none';
+          return;
+        }
+
+        const dropdownHtml = matches.map(vehicle => `
+          <div class="autocomplete-item" data-vehicle-number="${vehicle.vehicle_number}" data-driver-name="${vehicle.driver_name}">
+            <div class="font-bold text-gray-800">🚛 ${vehicle.vehicle_number}</div>
+            <div class="text-sm text-gray-600">Driver: ${vehicle.driver_name}</div>
+          </div>
+        `).join('');
+
+        dropdown.innerHTML = dropdownHtml;
+        dropdown.style.display = 'block';
+
+        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const vehicleNumber = this.getAttribute('data-vehicle-number');
+            const driverName = this.getAttribute('data-driver-name');
+            
+            input.value = vehicleNumber;
+            
+            if (driverFieldId) {
+              document.getElementById(driverFieldId).value = driverName;
+            }
+            
+            dropdown.style.display = 'none';
+          });
+        });
+      });
+
+      input.addEventListener('focus', function() {
+        if (this.value.trim().length > 0) {
+          this.dispatchEvent(new Event('input'));
+        }
+      });
+    }
+
+    function handleVehicleSubmit(e) {
+      e.preventDefault();
+
+      const vehicleData = {
+        id: generateId('vehicle'),
+        type: 'vehicle',
+        vehicle_number: document.getElementById('vehicle-number').value,
+        driver_name: document.getElementById('driver-name').value,
+        driver_phone: document.getElementById('driver-phone').value || '',
+        status: document.getElementById('vehicle-status').value,
+        company: document.getElementById('vehicle-company').value || '',
+        date: new Date().toISOString().split('T')[0],
+        amount: 0,
+        description: 'Vehicle registered',
+        from_location: '',
+        to_location: '',
+        distance: 0,
+        fuel_cost: 0,
+        toll_cost: 0,
+        created_at: new Date().toISOString()
+      };
+
+      allData.push(vehicleData);
+      saveData();
+      
+      document.getElementById('vehicle-form').reset();
+      showMessage('✅ Vehicle added successfully to your fleet!', 'success');
+    }
+
+    function handleAccountSubmit(e) {
+      e.preventDefault();
+
+      const transactionData = {
+        id: generateId('transaction'),
+        type: document.getElementById('transaction-type').value,
+        amount: parseFloat(document.getElementById('transaction-amount').value),
+        date: document.getElementById('transaction-date').value,
+        vehicle_number: document.getElementById('transaction-vehicle').value || '',
+        description: document.getElementById('transaction-description').value,
+        driver_name: '',
+        driver_phone: '',
+        company: '',
+        status: 'completed',
+        from_location: '',
+        to_location: '',
+        distance: 0,
+        fuel_cost: 0,
+        toll_cost: 0,
+        created_at: new Date().toISOString()
+      };
+
+      allData.push(transactionData);
+      saveData();
+      
+      document.getElementById('account-form').reset();
+      document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
+      showMessage('✅ Transaction recorded successfully!', 'success');
+    }
+
+    function handleTripSubmit(e) {
+      e.preventDefault();
+
+      const tripStatus = document.getElementById('trip-status').value;
+      const vehicleNumber = document.getElementById('trip-vehicle').value;
+      const driverName = document.getElementById('trip-driver').value;
+      const company = document.getElementById('trip-company').value;
+      const tripDate = document.getElementById('trip-date').value;
+      const tripAmount = parseFloat(document.getElementById('trip-amount').value);
+      const tripDescription = document.getElementById('trip-description').value;
+      const fromLocation = document.getElementById('trip-from').value;
+      const toLocation = document.getElementById('trip-to').value;
+      const distance = parseFloat(document.getElementById('trip-distance').value) || 0;
+      const fuelCost = parseFloat(document.getElementById('trip-fuel').value) || 0;
+      const tollCost = parseFloat(document.getElementById('trip-toll').value) || 0;
+
+      const tripData = {
+        id: generateId('trip'),
+        type: 'trip',
+        vehicle_number: vehicleNumber,
+        driver_name: driverName,
+        driver_phone: '',
+        company: company,
+        date: tripDate,
+        status: tripStatus,
+        amount: tripAmount,
+        description: tripDescription,
+        from_location: fromLocation,
+        to_location: toLocation,
+        distance: distance,
+        fuel_cost: fuelCost,
+        toll_cost: tollCost,
+        created_at: new Date().toISOString()
+      };
+
+      allData.push(tripData);
+
+      if (tripStatus === 'completed') {
+        const incomeData = {
+          id: generateId('transaction'),
+          type: 'income',
+          amount: tripAmount,
+          date: tripDate,
+          vehicle_number: vehicleNumber,
+          description: `Trip: ${fromLocation} → ${toLocation} - ${company}`,
+          driver_name: '',
+          driver_phone: '',
+          company: company,
+          status: 'completed',
+          from_location: fromLocation,
+          to_location: toLocation,
+          distance: distance,
+          fuel_cost: 0,
+          toll_cost: 0,
+          created_at: new Date().toISOString()
+        };
+        allData.push(incomeData);
+
+        if (fuelCost > 0) {
+          const fuelExpenseData = {
+            id: generateId('transaction'),
+            type: 'expense',
+            amount: fuelCost,
+            date: tripDate,
+            vehicle_number: vehicleNumber,
+            description: `Fuel cost: ${fromLocation} → ${toLocation}`,
+            driver_name: '',
+            driver_phone: '',
+            company: '',
+            status: 'completed',
+            from_location: fromLocation,
+            to_location: toLocation,
+            distance: distance,
+            fuel_cost: fuelCost,
+            toll_cost: 0,
+            created_at: new Date().toISOString()
+          };
+          allData.push(fuelExpenseData);
+        }
+
+        if (tollCost > 0) {
+          const tollExpenseData = {
+            id: generateId('transaction'),
+            type: 'expense',
+            amount: tollCost,
+            date: tripDate,
+            vehicle_number: vehicleNumber,
+            description: `Toll charges: ${fromLocation} → ${toLocation}`,
+            driver_name: '',
+            driver_phone: '',
+            company: '',
+            status: 'completed',
+            from_location: fromLocation,
+            to_location: toLocation,
+            distance: distance,
+            fuel_cost: 0,
+            toll_cost: tollCost,
+            created_at: new Date().toISOString()
+          };
+          allData.push(tollExpenseData);
+        }
+
+        showMessage('✅ Trip completed! Revenue & expenses auto-recorded! 🎉', 'success');
+      } else {
+        showMessage('✅ Trip scheduled successfully!', 'success');
+      }
+
+      saveData();
+      document.getElementById('trip-form').reset();
+      document.getElementById('trip-date').value = new Date().toISOString().split('T')[0];
+    }
+
+    function updateAllViews() {
+      updateDashboard();
+      updateVehicleList();
+      updateTransactionList();
+      updateTripList();
+    }
+
+    function updateDashboard() {
+      const transactions = allData.filter(item => item.type === 'income' || item.type === 'expense');
+      const vehicles = allData.filter(item => item.type === 'vehicle');
+      const trips = allData.filter(item => item.type === 'trip');
+      
+      const totalIncome = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      const totalExpenses = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      const netBalance = totalIncome - totalExpenses;
+      const profitMargin = totalIncome > 0 ? ((netBalance / totalIncome) * 100).toFixed(1) : 0;
+
+      document.getElementById('total-income').textContent = '₹' + totalIncome.toLocaleString('en-IN');
+      document.getElementById('total-expenses').textContent = '₹' + totalExpenses.toLocaleString('en-IN');
+      document.getElementById('net-balance').textContent = '₹' + netBalance.toLocaleString('en-IN');
+      document.getElementById('profit-margin').innerHTML = `
+        <span class="mr-2">⚡</span>
+        <span>Profit Margin: ${profitMargin}%</span>
+      `;
+
+      document.getElementById('stat-vehicles').textContent = vehicles.length;
+      document.getElementById('stat-active-trips').textContent = trips.filter(t => t.status === 'in-progress').length;
+      document.getElementById('stat-completed-trips').textContent = trips.filter(t => t.status === 'completed').length;
+      document.getElementById('stat-available-vehicles').textContent = vehicles.filter(v => v.status === 'available').length;
+
+      renderWeeklyChart(transactions);
+      renderVehicleStatusChart();
+      renderMonthlyChart(transactions);
+      renderTripStatusChart();
+      renderRecentActivity();
+    }
+
+    function renderWeeklyChart(transactions) {
+      const last7Days = [];
+      const today = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        last7Days.push(date.toISOString().split('T')[0]);
+      }
+
+      const chartData = last7Days.map(date => {
+        const dayTransactions = transactions.filter(t => t.date === date);
+        const income = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
+        const expense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
+        return { date, income, expense };
+      });
+
+      const maxValue = Math.max(...chartData.flatMap(d => [d.income, d.expense])) || 100;
+
+      const chartHtml = `
+        <div class="flex items-end justify-between h-48 gap-2">
+          ${chartData.map(day => {
+            const incomeHeight = (day.income / maxValue) * 100;
+            const expenseHeight = (day.expense / maxValue) * 100;
+            const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+            
+            return `
+              <div class="flex-1 flex flex-col items-center gap-2">
+                <div class="w-full flex gap-1 items-end h-40">
+                  <div class="flex-1 bg-gradient-to-t from-green-500 to-green-400 rounded-t-xl chart-bar shadow-lg" style="height: ${incomeHeight}%;" title="Income: ₹${day.income}"></div>
+                  <div class="flex-1 bg-gradient-to-t from-red-500 to-red-400 rounded-t-xl chart-bar shadow-lg" style="height: ${expenseHeight}%;" title="Expense: ₹${day.expense}"></div>
+                </div>
+                <div class="text-xs text-gray-700 font-bold">${dayName}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="flex justify-center gap-8 mt-6">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-green-400 rounded-lg shadow"></div>
+            <span class="text-sm text-gray-700 font-bold">Income</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-red-500 to-red-400 rounded-lg shadow"></div>
+            <span class="text-sm text-gray-700 font-bold">Expenses</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('weekly-chart').innerHTML = chartHtml;
+    }
+
+    function renderVehicleStatusChart() {
+      const vehicles = allData.filter(item => item.type === 'vehicle');
+      
+      const statusCounts = {
+        available: vehicles.filter(v => v.status === 'available').length,
+        'in-transit': vehicles.filter(v => v.status === 'in-transit').length,
+        maintenance: vehicles.filter(v => v.status === 'maintenance').length
+      };
+
+      const total = vehicles.length || 1;
+      
+      const chartHtml = `
+        <div class="w-full space-y-6">
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">🟢 Available</span>
+              <span class="text-xl font-black text-green-600">${statusCounts.available} vehicles</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-green-500 to-green-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts.available / total) * 100}%">
+                ${statusCounts.available > 0 ? Math.round((statusCounts.available / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">🔵 In Transit</span>
+              <span class="text-xl font-black text-blue-600">${statusCounts['in-transit']} vehicles</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts['in-transit'] / total) * 100}%">
+                ${statusCounts['in-transit'] > 0 ? Math.round((statusCounts['in-transit'] / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">🟠 Maintenance</span>
+              <span class="text-xl font-black text-orange-600">${statusCounts.maintenance} vehicles</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-orange-500 to-orange-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts.maintenance / total) * 100}%">
+                ${statusCounts.maintenance > 0 ? Math.round((statusCounts.maintenance / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('vehicle-status-chart').innerHTML = chartHtml;
+    }
+
+    function renderMonthlyChart(transactions) {
+      const last30Days = [];
+      const today = new Date();
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        last30Days.push(date.toISOString().split('T')[0]);
+      }
+
+      const chartData = last30Days.map(date => {
+        const dayTransactions = transactions.filter(t => t.date === date);
+        const income = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0);
+        const expense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
+        return { date, income, expense };
+      });
+
+      const maxValue = Math.max(...chartData.flatMap(d => [d.income, d.expense])) || 100;
+
+      const chartHtml = `
+        <div class="flex items-end justify-between h-64 gap-1">
+          ${chartData.map((day, index) => {
+            const incomeHeight = (day.income / maxValue) * 100;
+            const expenseHeight = (day.expense / maxValue) * 100;
+            const showLabel = index % 5 === 0;
+            const dayNum = new Date(day.date).getDate();
+            
+            return `
+              <div class="flex-1 flex flex-col items-center gap-2">
+                <div class="w-full flex gap-0.5 items-end h-56">
+                  <div class="flex-1 bg-gradient-to-t from-green-500 to-green-400 rounded-t chart-bar shadow" style="height: ${incomeHeight}%;" title="Income: ₹${day.income}"></div>
+                  <div class="flex-1 bg-gradient-to-t from-red-500 to-red-400 rounded-t chart-bar shadow" style="height: ${expenseHeight}%;" title="Expense: ₹${day.expense}"></div>
+                </div>
+                ${showLabel ? `<div class="text-xs text-gray-700 font-bold">${dayNum}</div>` : '<div class="h-4"></div>'}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="flex justify-center gap-8 mt-6">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-green-400 rounded-lg shadow"></div>
+            <span class="text-sm text-gray-700 font-bold">Income</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-gradient-to-br from-red-500 to-red-400 rounded-lg shadow"></div>
+            <span class="text-sm text-gray-700 font-bold">Expenses</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('monthly-chart').innerHTML = chartHtml;
+    }
+
+    function renderTripStatusChart() {
+      const trips = allData.filter(item => item.type === 'trip');
+      
+      const statusCounts = {
+        scheduled: trips.filter(t => t.status === 'scheduled').length,
+        'in-progress': trips.filter(t => t.status === 'in-progress').length,
+        completed: trips.filter(t => t.status === 'completed').length
+      };
+
+      const total = trips.length || 1;
+      
+      const chartHtml = `
+        <div class="w-full space-y-6">
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">📅 Scheduled</span>
+              <span class="text-xl font-black text-gray-600">${statusCounts.scheduled} trips</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-gray-500 to-gray-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts.scheduled / total) * 100}%">
+                ${statusCounts.scheduled > 0 ? Math.round((statusCounts.scheduled / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">🔄 In Progress</span>
+              <span class="text-xl font-black text-blue-600">${statusCounts['in-progress']} trips</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts['in-progress'] / total) * 100}%">
+                ${statusCounts['in-progress'] > 0 ? Math.round((statusCounts['in-progress'] / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-3">
+              <span class="text-xl font-black text-gray-700">✅ Completed</span>
+              <span class="text-xl font-black text-green-600">${statusCounts.completed} trips</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-14 shadow-inner">
+              <div class="bg-gradient-to-r from-green-500 to-green-400 h-14 rounded-full flex items-center justify-center text-white text-lg font-black transition-all duration-500 shadow-lg" style="width: ${(statusCounts.completed / total) * 100}%">
+                ${statusCounts.completed > 0 ? Math.round((statusCounts.completed / total) * 100) + '%' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('trip-status-chart').innerHTML = chartHtml;
+    }
+
+    function renderRecentActivity() {
+      const recentItems = [...allData]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+
+      if (recentItems.length === 0) {
+        document.getElementById('recent-activity').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg font-semibold">🚀 No activity yet!</p><p class="text-gray-400 mt-2">Start by adding vehicles, trips, or transactions to see them here.</p></div>';
+        return;
+      }
+
+      const activityHtml = recentItems.map(item => {
+        let icon = '📋';
+        let color = 'blue';
+        let title = item.description;
+        let bgGradient = 'from-blue-50 to-blue-100';
+        
+        if (item.type === 'vehicle') {
+          icon = '🚛';
+          color = 'purple';
+          bgGradient = 'from-purple-50 to-purple-100';
+          title = `Vehicle ${item.vehicle_number} - ${item.driver_name}`;
+        } else if (item.type === 'income') {
+          icon = '💵';
+          color = 'green';
+          bgGradient = 'from-green-50 to-green-100';
+          title = `Revenue: ${item.description}`;
+        } else if (item.type === 'expense') {
+          icon = '💸';
+          color = 'red';
+          bgGradient = 'from-red-50 to-red-100';
+          title = `Expense: ${item.description}`;
+        } else if (item.type === 'trip') {
+          icon = '📦';
+          color = 'blue';
+          bgGradient = 'from-blue-50 to-blue-100';
+          title = `Trip: ${item.vehicle_number} ${item.from_location ? '→ ' + item.from_location + ' to ' + item.to_location : ''}`;
+        }
+
+        return `
+          <div class="flex items-center gap-4 p-5 bg-gradient-to-r ${bgGradient} rounded-xl shadow-md hover:shadow-xl transition-all">
+            <div class="text-4xl">${icon}</div>
+            <div class="flex-1">
+              <div class="font-bold text-gray-800 text-lg">${title}</div>
+              <div class="text-sm text-gray-600 font-semibold mt-1">${new Date(item.created_at).toLocaleString('en-IN')}</div>
+            </div>
+            ${item.amount ? `<div class="text-2xl font-black text-${color}-600">₹${item.amount.toLocaleString('en-IN')}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('recent-activity').innerHTML = activityHtml;
+    }
+
+    function updateVehicleList() {
+      const vehicles = allData.filter(item => item.type === 'vehicle');
+      
+      if (vehicles.length === 0) {
+        document.getElementById('vehicle-list').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg font-semibold">🚛 No vehicles in your fleet yet!</p><p class="text-gray-400 mt-2">Add your first vehicle using the form above.</p></div>';
+        return;
+      }
+
+      const listHtml = vehicles.map(vehicle => {
+        let statusColor = 'green';
+        let statusText = '🟢 Available';
+        let statusBg = 'from-green-50 to-green-100';
+        
+        if (vehicle.status === 'in-transit') {
+          statusColor = 'blue';
+          statusText = '🔵 In Transit';
+          statusBg = 'from-blue-50 to-blue-100';
+        } else if (vehicle.status === 'maintenance') {
+          statusColor = 'orange';
+          statusText = '🟠 Maintenance';
+          statusBg = 'from-orange-50 to-orange-100';
+        }
+
+        return `
+          <div class="flex items-center justify-between p-6 bg-gradient-to-r ${statusBg} rounded-xl shadow-md hover:shadow-xl transition-all">
+            <div class="flex items-center gap-5">
+              <div class="text-5xl">🚛</div>
+              <div>
+                <div class="font-black text-gray-800 text-xl">${vehicle.vehicle_number}</div>
+                <div class="text-sm text-gray-700 font-bold mt-1">👤 Driver: ${vehicle.driver_name}</div>
+                ${vehicle.driver_phone ? `<div class="text-sm text-gray-700 font-bold">📞 ${vehicle.driver_phone}</div>` : ''}
+                ${vehicle.company ? `<div class="text-sm text-gray-700 font-bold">🏢 ${vehicle.company}</div>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="status-badge bg-${statusColor}-200 text-${statusColor}-800 text-base px-4 py-2">${statusText}</span>
+              <button onclick="deleteRecord('${vehicle.id}')" class="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition font-bold shadow-lg">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('vehicle-list').innerHTML = listHtml;
+    }
+
+    function updateTransactionList() {
+      const transactions = allData.filter(item => item.type === 'income' || item.type === 'expense')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      if (transactions.length === 0) {
+        document.getElementById('transaction-list').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg font-semibold">💰 No transactions recorded yet!</p><p class="text-gray-400 mt-2">Add your first transaction using the form above.</p></div>';
+        return;
+      }
+
+      const listHtml = transactions.map(transaction => {
+        const isIncome = transaction.type === 'income';
+        const icon = isIncome ? '💵' : '💸';
+        const color = isIncome ? 'green' : 'red';
+        const sign = isIncome ? '+' : '-';
+        const bgGradient = isIncome ? 'from-green-50 to-green-100' : 'from-red-50 to-red-100';
+
+        return `
+          <div class="flex items-center justify-between p-6 bg-gradient-to-r ${bgGradient} rounded-xl shadow-md hover:shadow-xl transition-all">
+            <div class="flex items-center gap-5">
+              <div class="text-5xl">${icon}</div>
+              <div>
+                <div class="font-black text-gray-800 text-xl">${transaction.description}</div>
+                <div class="text-sm text-gray-700 font-bold mt-1">📅 ${new Date(transaction.date).toLocaleDateString('en-IN')}</div>
+                ${transaction.vehicle_number ? `<div class="text-sm text-gray-700 font-bold">🚛 ${transaction.vehicle_number}</div>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="text-3xl font-black text-${color}-600">${sign}₹${transaction.amount.toLocaleString('en-IN')}</div>
+              <button onclick="deleteRecord('${transaction.id}')" class="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition font-bold shadow-lg">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('transaction-list').innerHTML = listHtml;
+    }
+
+    function updateTripList() {
+      const trips = allData.filter(item => item.type === 'trip')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      if (trips.length === 0) {
+        document.getElementById('trip-list').innerHTML = '<div class="text-center py-12"><p class="text-gray-500 text-lg font-semibold">🗺️ No trips scheduled yet!</p><p class="text-gray-400 mt-2">Schedule your first trip using the form above.</p></div>';
+        return;
+      }
+
+      const listHtml = trips.map(trip => {
+        let statusColor = 'gray';
+        let statusText = '📅 Scheduled';
+        let statusBg = 'from-gray-50 to-gray-100';
+        
+        if (trip.status === 'in-progress') {
+          statusColor = 'blue';
+          statusText = '🔄 In Progress';
+          statusBg = 'from-blue-50 to-blue-100';
+        } else if (trip.status === 'completed') {
+          statusColor = 'green';
+          statusText = '✅ Completed';
+          statusBg = 'from-green-50 to-green-100';
+        }
+
+        const statusButtons = trip.status !== 'completed' ? `
+          <select id="status-${trip.id}" class="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-bold bg-white">
+            <option value="">Update Status...</option>
+            <option value="in-progress">🔄 In Progress</option>
+            <option value="completed">✅ Complete</option>
+          </select>
+          <button onclick="updateTripStatus('${trip.id}')" class="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition font-bold shadow-lg">
+            Update
+          </button>
+        ` : '';
+
+        const netProfit = trip.amount - (trip.fuel_cost || 0) - (trip.toll_cost || 0);
+
+        return `
+          <div class="p-6 bg-gradient-to-r ${statusBg} rounded-xl shadow-md hover:shadow-xl transition-all">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-5">
+                <div class="text-5xl">📦</div>
+                <div>
+                  <div class="font-black text-gray-800 text-xl">${trip.vehicle_number} - ${trip.company}</div>
+                  <div class="text-sm text-gray-700 font-bold mt-1">👤 ${trip.driver_name}</div>
+                  <div class="text-sm text-gray-700 font-bold">📅 ${new Date(trip.date).toLocaleDateString('en-IN')}</div>
+                </div>
+              </div>
+              <span class="status-badge bg-${statusColor}-200 text-${statusColor}-800 text-base px-4 py-2">${statusText}</span>
+            </div>
+            
+            ${trip.from_location && trip.to_location ? `
+              <div class="flex items-center gap-4 mb-4 p-4 bg-white rounded-lg">
+                <div class="flex items-center gap-3 flex-1">
+                  <div class="relative">
+                    <div class="route-line h-12"></div>
+                    <div class="route-dot bg-green-500 top-0"></div>
+                    <div class="route-dot bg-red-500 bottom-0"></div>
+                  </div>
+                  <div>
+                    <div class="font-bold text-gray-800">📍 ${trip.from_location}</div>
+                    <div class="text-xs text-gray-500 my-1">↓</div>
+                    <div class="font-bold text-gray-800">🎯 ${trip.to_location}</div>
+                  </div>
+                </div>
+                ${trip.distance > 0 ? `<div class="text-right"><div class="text-2xl font-black text-purple-600">${trip.distance}</div><div class="text-xs text-gray-600 font-bold">KM</div></div>` : ''}
+              </div>
+            ` : ''}
+            
+            <div class="mb-4 p-4 bg-white rounded-lg">
+              <div class="text-sm text-gray-700 font-bold">📝 ${trip.description}</div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div class="bg-white p-3 rounded-lg text-center">
+                <div class="text-xs text-gray-600 font-bold">Revenue</div>
+                <div class="text-lg font-black text-green-600">₹${trip.amount.toLocaleString('en-IN')}</div>
+              </div>
+              ${trip.fuel_cost > 0 ? `
+                <div class="bg-white p-3 rounded-lg text-center">
+                  <div class="text-xs text-gray-600 font-bold">Fuel Cost</div>
+                  <div class="text-lg font-black text-orange-600">₹${trip.fuel_cost.toLocaleString('en-IN')}</div>
+                </div>
+              ` : ''}
+              ${trip.toll_cost > 0 ? `
+                <div class="bg-white p-3 rounded-lg text-center">
+                  <div class="text-xs text-gray-600 font-bold">Toll Cost</div>
+                  <div class="text-lg font-black text-blue-600">₹${trip.toll_cost.toLocaleString('en-IN')}</div>
+                </div>
+              ` : ''}
+              ${trip.fuel_cost > 0 || trip.toll_cost > 0 ? `
+                <div class="bg-white p-3 rounded-lg text-center">
+                  <div class="text-xs text-gray-600 font-bold">Net Profit</div>
+                  <div class="text-lg font-black text-purple-600">₹${netProfit.toLocaleString('en-IN')}</div>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="flex items-center justify-end gap-3 flex-wrap">
+              ${statusButtons}
+              <button onclick="deleteRecord('${trip.id}')" class="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition font-bold shadow-lg">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('trip-list').innerHTML = listHtml;
+    }
+
+    function updateTripStatus(tripId) {
+      const trip = allData.find(item => item.id === tripId);
+      if (!trip) return;
+
+      const selectElement = document.getElementById('status-' + tripId);
+      const newStatus = selectElement.value;
+
+      if (!newStatus) {
+        showMessage('⚠️ Please select a status to update', 'error');
+        return;
+      }
+
+      trip.status = newStatus;
+
+      if (newStatus === 'completed') {
+        const incomeData = {
+          id: generateId('transaction'),
+          type: 'income',
+          amount: trip.amount,
+          date: trip.date,
+          vehicle_number: trip.vehicle_number,
+          description: `Trip: ${trip.from_location} → ${trip.to_location} - ${trip.company}`,
+          driver_name: '',
+          driver_phone: '',
+          company: trip.company,
+          status: 'completed',
+          from_location: trip.from_location,
+          to_location: trip.to_location,
+          distance: trip.distance,
+          fuel_cost: 0,
+          toll_cost: 0,
+          created_at: new Date().toISOString()
+        };
+        allData.push(incomeData);
+
+        if (trip.fuel_cost > 0) {
+          const fuelExpenseData = {
+            id: generateId('transaction'),
+            type: 'expense',
+            amount: trip.fuel_cost,
+            date: trip.date,
+            vehicle_number: trip.vehicle_number,
+            description: `Fuel: ${trip.from_location} → ${trip.to_location}`,
+            driver_name: '',
+            driver_phone: '',
+            company: '',
+            status: 'completed',
+            from_location: trip.from_location,
+            to_location: trip.to_location,
+            distance: trip.distance,
+            fuel_cost: trip.fuel_cost,
+            toll_cost: 0,
+            created_at: new Date().toISOString()
+          };
+          allData.push(fuelExpenseData);
+        }
+
+        if (trip.toll_cost > 0) {
+          const tollExpenseData = {
+            id: generateId('transaction'),
+            type: 'expense',
+            amount: trip.toll_cost,
+            date: trip.date,
+            vehicle_number: trip.vehicle_number,
+            description: `Toll: ${trip.from_location} → ${trip.to_location}`,
+            driver_name: '',
+            driver_phone: '',
+            company: '',
+            status: 'completed',
+            from_location: trip.from_location,
+            to_location: trip.to_location,
+            distance: trip.distance,
+            fuel_cost: 0,
+            toll_cost: trip.toll_cost,
+            created_at: new Date().toISOString()
+          };
+          allData.push(tollExpenseData);
+        }
+
+        showMessage('✅ Trip completed! Revenue & expenses auto-recorded! 🎉', 'success');
+      } else {
+        showMessage('✅ Trip status updated successfully!', 'success');
+      }
+
+      saveData();
+    }
+
+    function deleteRecord(recordId) {
+      const confirmDelete = confirm('Are you sure you want to delete this record?');
+      if (!confirmDelete) return;
+
+      allData = allData.filter(item => item.id !== recordId);
+      saveData();
+      showMessage('✅ Record deleted successfully!', 'success');
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-500', 'text-white', 'shadow-lg');
+        tab.classList.add('text-gray-700');
+      });
+
+      document.getElementById('content-' + tabName).classList.remove('hidden');
+      const activeTab = document.getElementById('tab-' + tabName);
+      activeTab.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-500', 'text-white', 'shadow-lg');
+      activeTab.classList.remove('text-gray-700');
+    }
+
+    function showMessage(message, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `fixed top-6 right-6 px-8 py-5 rounded-2xl shadow-2xl text-white font-black text-lg ${type === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-to-r from-red-500 to-red-600'} z-50 slide-in`;
+      messageDiv.textContent = message;
+      document.body.appendChild(messageDiv);
+      
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 4000);
+    }
+
+    // Initialize the app
+    initApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9acbe776d735c195',t:'MTc2NTUyODY5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
